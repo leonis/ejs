@@ -12,14 +12,18 @@
     "Timothy Gu <timothygu99@gmail.com> (https://timothygu.github.io)"
   ],
   "license": "Apache-2.0",
-  "main": "./lib/ejs.js",
+  "main": "./lib/ejs-promisify.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/mde/ejs.git"
   },
   "bugs": "https://github.com/mde/ejs/issues",
   "homepage": "https://github.com/mde/ejs",
-  "dependencies": {},
+  "dependencies": {
+    "co": "^4.6.0",
+    "request": "^2.79.0",
+    "request-promise": "^4.1.1"
+  },
   "devDependencies": {
     "browserify": "^13.0.1",
     "eslint": "^3.0.0",
