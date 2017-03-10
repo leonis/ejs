@@ -861,6 +861,17 @@ suite('include()', function () {
     assert.equal(out, expected);
   });
 
+  test('handles errors in included file', function() {
+    try {
+      ejs.render('<%- include("fixtures/include-with-error") %>', {}, {filename: path.join(__dirname, 'f.ejs')});
+    }
+    catch (err) {
+      assert.ok(err.message.indexOf('foobar is not defined') > -1);
+      return;
+    }
+    throw new Error('expected inclusion error');
+  });
+
 });
 
 suite('preprocessor include', function () {
@@ -962,6 +973,17 @@ suite('preprocessor include', function () {
         expected);
   });
 
+  test('handles errors in included file', function() {
+    try {
+      ejs.render('<%- include fixtures/include-with-error %>', {}, {filename: path.join(__dirname, 'f.ejs')});
+    }
+    catch (err) {
+      assert.ok(err.message.indexOf('foobar is not defined') > -1);
+      return;
+    }
+    throw new Error('expected inclusion error');
+  });
+
 });
 
 suite('comments', function () {
@@ -981,6 +1003,25 @@ suite('require', function () {
       assert.equal(template({filename: file, pets: users}),
           fixture('menu_preprocessor.html'));
     }
+  });
+});
+
+suite('test fileloader', function () {
+
+  var myFileLoad = function (filePath) {
+    return 'myFileLoad: ' + fs.readFileSync(filePath);
+  };
+
+  test('test custom fileload', function (done) {
+    ejs.fileLoader = myFileLoad;
+    ejs.renderFile('test/fixtures/para.ejs', function(err, html) {
+      if (err) {
+        return done(err);
+      }
+      assert.equal(html, 'myFileLoad: <p>hey</p>\n');
+      done();
+    });
+
   });
 });
 
