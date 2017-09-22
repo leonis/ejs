@@ -289,6 +289,7 @@ suite('ejs.render(str, data, opts)', function () {
     var out = ejs.render('<%= this.foo %>', {}, {context: ctxt});
     assert.equal(out, ctxt.foo);
   });
+
 });
 
 suite('ejs.renderFile(path, [data], [options], fn)', function () {
@@ -412,6 +413,81 @@ suite('ejs.renderFile(path, [data], [options], fn)', function () {
     });
 
   });
+
+  test('support express multiple views folders, falls back to second if first is not available', function (done) {
+    var data = {
+      viewsText: 'test',
+      includePath: 'views-include.ejs',
+      settings: {
+        views: [
+          path.join(__dirname, 'fixtures/nonexistent-folder'),
+          path.join(__dirname, 'fixtures')
+        ]
+      }
+    };
+    ejs.renderFile(path.join(__dirname, 'fixtures/views.ejs'), data, function(error, data){
+      assert.ifError(error);
+      assert.equal('<div><p>global test</p>\n</div>\n', data);
+      done();
+    });
+
+  });
+
+  test('support express multiple views folders, falls back to second if first is not available (include preprocessor)', function (done) {
+    var data = {
+      viewsText: 'test',
+      settings: {
+        views: [
+          path.join(__dirname, 'fixtures/nonexistent-folder'),
+          path.join(__dirname, 'fixtures')
+        ]
+      }
+    };
+    ejs.renderFile(path.join(__dirname, 'fixtures/views-old.ejs'), data, function(error, data){
+      assert.ifError(error);
+      assert.equal('<div><p>global test</p>\n</div>\n', data);
+      done();
+    });
+
+  });
+
+  test('looks relative to the containing file first (include preprocessor)', function (done) {
+    var data = {
+      viewsText: 'test',
+      settings: {
+        views: [
+          path.join(__dirname, 'fixtures/views'),
+          path.join(__dirname, 'fixtures')
+        ]
+      }
+    };
+    ejs.renderFile(path.join(__dirname, 'fixtures/views-old.ejs'), data, function(error, data){
+      assert.ifError(error);
+      assert.equal('<div><p>global test</p>\n</div>\n', data);
+      done();
+    });
+
+  });
+
+  test('can reference by paths with directory names', function (done) {
+    var data = {
+      viewsText: 'test',
+      includePath: 'views/views-include.ejs',
+      settings: {
+        views: [
+          path.join(__dirname, 'fixtures/views'),
+          path.join(__dirname, 'fixtures')
+        ]
+      }
+    };
+    ejs.renderFile(path.join(__dirname, 'fixtures/views.ejs'), data, function(error, data){
+      assert.ifError(error);
+      assert.equal('<div><p>custom test</p>\n</div>\n', data);
+      done();
+    });
+
+  });
+
 });
 
 suite('cache specific', function () {
@@ -757,12 +833,24 @@ suite('include()', function () {
         fixture('include-simple.html'));
   });
 
+  test('include and escape ejs', function () {
+    var file = 'test/fixtures/include-escaped.ejs';
+    assert.equal(ejs.render(fixture('include-escaped.ejs'), {}, {filename: file}),
+        fixture('include-escaped.html'));
+  });
+
+  test('include in expression ejs', function () {
+    var file = 'test/fixtures/include-expression.ejs';
+    assert.equal(ejs.render(fixture('include-expression.ejs'), {}, {filename: file}),
+        fixture('include-expression.html'));
+  });
+
   test('include ejs fails without `filename`', function () {
     try {
       ejs.render(fixture('include-simple.ejs'));
     }
     catch (err) {
-      assert.ok(err.message.indexOf('requires the \'filename\' option') > -1);
+      assert.ok(err.message.indexOf('Could not find') > -1);
       return;
     }
     throw new Error('expected inclusion error');
@@ -890,7 +978,7 @@ suite('preprocessor include', function () {
       ejs.render(fixture('include_preprocessor.ejs'), {pets: users}, {delimiter: '@'});
     }
     catch (err) {
-      assert.ok(err.message.indexOf('requires the \'filename\' option') > -1);
+      assert.ok(err.message.indexOf('Could not find') > -1);
       return;
     }
     throw new Error('expected inclusion error');
